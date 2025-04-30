@@ -3,20 +3,14 @@ import React from "react";
 import { DataTable } from "@/components/ui/data-table";
 import { Check, X } from "lucide-react";
 import { PumpLog } from "@/types/schema";
-import { useApi } from "@/hooks/use-api";
-import { PumpAPI, mockPaginatedResponse } from "@/services/api";
-import { mockPumps } from "@/data/mockData";
+import { useBreakpoint } from "@/hooks/use-responsive";
 
 interface PumpLogTableProps {
   pumpLogs: PumpLog[];
 }
 
 const PumpLogTable: React.FC<PumpLogTableProps> = ({ pumpLogs }) => {
-  // Fetch pumps data for better display if not nested
-  const { data: pumps } = useApi(
-    () => PumpAPI.getAll().catch(() => mockPaginatedResponse(mockPumps)),
-    { defaultData: [] }
-  );
+  const isMobile = useBreakpoint('md', 'down');
 
   const BooleanCell = ({ value }: { value: boolean }) => {
     return value ? (
@@ -26,24 +20,35 @@ const PumpLogTable: React.FC<PumpLogTableProps> = ({ pumpLogs }) => {
     );
   };
 
-  const columns = [
+  // Mobile-optimized columns (fewer columns)
+  const mobileColumns = [
+    {
+      header: "Date",
+      accessorKey: "created_at",
+      cell: (item: any) => {
+        return item.created_at 
+          ? new Date(item.created_at).toLocaleDateString() 
+          : new Date().toLocaleDateString();
+      },
+    },
+    {
+      header: "Toilet",
+      accessorKey: "is_toilet_cleaned",
+      cell: (item: any) => <BooleanCell value={item.is_toilet_cleaned} />,
+    },
+    {
+      header: "Office",
+      accessorKey: "is_office_cleaned",
+      cell: (item: any) => <BooleanCell value={item.is_office_cleaned} />,
+    },
+  ];
+  
+  // Full set of columns for larger screens
+  const desktopColumns = [
     {
       header: "Pump",
-      accessorKey: "pump",
-      cell: (item: any) => {
-        // Handle direct API response with nested pump
-        if (item.pump?.name) {
-          return item.pump.name;
-        }
-        
-        // Handle ID reference
-        if (item.pump_id) {
-          const pump = pumps?.find((p: any) => p.id === item.pump_id);
-          return pump ? pump.name : "N/A";
-        }
-        
-        return "N/A";
-      },
+      accessorKey: "pump.name",
+      cell: (item: any) => item.pump?.name || "N/A",
     },
     {
       header: "Toilet Cleaned",
@@ -76,14 +81,14 @@ const PumpLogTable: React.FC<PumpLogTableProps> = ({ pumpLogs }) => {
       cell: (item: any) => {
         return item.created_at 
           ? new Date(item.created_at).toLocaleDateString() 
-          : (item.created_at || new Date().toLocaleDateString());
+          : new Date().toLocaleDateString();
       },
     },
   ];
 
   return (
     <DataTable
-      columns={columns}
+      columns={isMobile ? mobileColumns : desktopColumns}
       data={pumpLogs}
       searchPlaceholder="Search pump logs..."
     />

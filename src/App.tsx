@@ -42,10 +42,13 @@ const queryClient = new QueryClient({
 // Protected route wrapper
 const ProtectedRoute = ({ children, requiredRole }: { children: React.ReactNode, requiredRole?: string }) => {
   const { user, loading, isAuthenticated } = useAuth();
-  console.log(user);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin h-10 w-10 border-4 border-pumpPrimary border-t-transparent rounded-full"></div>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
@@ -59,17 +62,21 @@ const ProtectedRoute = ({ children, requiredRole }: { children: React.ReactNode,
   return <>{children}</>;
 };
 
-const GoogleAuthWrapper = () =>{
+const GoogleAuthWrapper = () => {
   return (
     <GoogleOAuthProvider clientId="332431354817-1nb2r1v41kccvarmabma7b7fe7nghn3l.apps.googleusercontent.com">
-      <GoogleLogin></GoogleLogin>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pumpBg to-white p-4">
+        <div className="w-full max-w-md">
+          <GoogleLogin />
+        </div>
+      </div>
     </GoogleOAuthProvider>
   )
 }
 
 // App routes with authentication
 const AppRoutes = () => {
-  const user = JSON.parse(localStorage.getItem('user-info'));
+  const user = JSON.parse(localStorage.getItem('user-info') || '{}');
   const isSuperAdmin = user?.role === "superadmin";
   
   return (
@@ -134,11 +141,11 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
-      <Sonner />
+      <Sonner position="top-right" closeButton={true} expand={true} />
       <BrowserRouter>
-      <AuthProvider>
-         <AppRoutes />
-         </AuthProvider>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -19,7 +19,12 @@ const Users = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { toast } = useToast();
   
-  const { data: users, isLoading, error, refetch } = useApi<User[]>(
+  const { 
+    data: users = [], 
+    isLoading, 
+    error, 
+    refetch 
+  } = useApi<User[]>(
     () => UserAPI.getAll(),
     { defaultData: [] }
   );
@@ -34,7 +39,11 @@ const Users = () => {
       refetch();
       setIsFormOpen(false);
     } catch (error) {
-      console.error("Error adding user:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add user.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -51,7 +60,11 @@ const Users = () => {
       setIsFormOpen(false);
       setSelectedUser(null);
     } catch (error) {
-      console.error("Error updating user:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update user.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -68,7 +81,11 @@ const Users = () => {
       setIsDeleteDialogOpen(false);
       setSelectedUser(null);
     } catch (error) {
-      console.error("Error deleting user:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete user.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -110,16 +127,16 @@ const Users = () => {
   ];
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="container mx-auto py-6 px-4 sm:px-6">
       <Card>
-        <CardHeader className="flex flex-row items-center">
-          <div className="space-y-1.5">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center">
+          <div className="space-y-1.5 mb-4 sm:mb-0">
             <CardTitle>Users</CardTitle>
           </div>
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
               <Button 
-                className="ml-auto bg-pumpPrimary hover:bg-pumpSecondary"
+                className="ml-0 sm:ml-auto bg-pumpPrimary hover:bg-pumpSecondary w-full sm:w-auto"
                 onClick={() => setSelectedUser(null)}
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -144,13 +161,15 @@ const Users = () => {
               <span className="block sm:inline"> Failed to load users. Please try again later.</span>
             </div>
           ) : (
-            <DataTable
-              columns={columns}
-              data={users || []}
-              onEdit={(user) => openEditForm(user)}
-              onDelete={(user) => openDeleteDialog(user)}
-              searchPlaceholder="Search users..."
-            />
+            <div className="overflow-x-auto">
+              <DataTable
+                columns={columns}
+                data={users || []}
+                onEdit={(user) => openEditForm(user)}
+                onDelete={(user) => openDeleteDialog(user)}
+                searchPlaceholder="Search users..."
+              />
+            </div>
           )}
         </CardContent>
       </Card>
@@ -168,11 +187,11 @@ const Users = () => {
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="flex flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="mt-0 w-full sm:w-auto">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteUser}
-              className="bg-pumpRed hover:bg-red-700"
+              className="bg-pumpRed hover:bg-red-700 w-full sm:w-auto"
             >
               Delete
             </AlertDialogAction>

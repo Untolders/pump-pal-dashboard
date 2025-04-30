@@ -5,11 +5,9 @@ import type {
   FuelType, IncomingFuel, Nozzle, EmployeeLog, Payment, Sale,
   ApiResponse, PaginatedResponse, User
 } from '@/types/schema';
-import { useAuth } from "../contexts/AuthContext";
 
 // Base API URL - should come from environment variables in production
 const API_BASE_URL = 'http://localhost:3000/api/v1/';
-
 
 // Create a custom fetch function with error handling
 async function apiRequest<T>(
@@ -19,25 +17,33 @@ async function apiRequest<T>(
   const url = `${API_BASE_URL}${endpoint}`;
   
   try {
+    // Get auth token if available
+    const token = localStorage.getItem('token');
+    
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    
+    // Add auth token if available
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const errorMessage = errorData.message || `Error: ${response.status} ${response.statusText}`;
-      toast.error(errorMessage);
       throw new Error(errorMessage);
     }
 
     return await response.json();
   } catch (error) {
     console.error('API request failed:', error);
-    toast.error(`Request failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     throw error;
   }
 }
@@ -86,6 +92,7 @@ export const PumpAPI = {
   create: (data: Partial<Pump>) => createItem<Pump>('/pumps', data),
   update: (id: string, data: Partial<Pump>) => updateItem<Pump>('/pumps', id, data),
   delete: (id: string) => deleteItem<Pump>('/pumps', id),
+  getByPumpId: (pumpId: string) => fetchOne<Pump>('/pumps', pumpId),
 };
 
 export const VehicleAPI = {
@@ -102,6 +109,7 @@ export const ShiftAPI = {
   create: (data: Partial<Shift>) => createItem<Shift>('/shifts', data),
   update: (id: string, data: Partial<Shift>) => updateItem<Shift>('/shifts', id, data),
   delete: (id: string) => deleteItem<Shift>('/shifts', id),
+  getByPumpId: (pumpId: string) => apiRequest<Shift[]>(`/shift/${pumpId}`),
 };
 
 export const PumpLogAPI = {
@@ -110,6 +118,7 @@ export const PumpLogAPI = {
   create: (data: Partial<PumpLog>) => createItem<PumpLog>('/pump-logs', data),
   update: (id: string, data: Partial<PumpLog>) => updateItem<PumpLog>('/pump-logs', id, data),
   delete: (id: string) => deleteItem<PumpLog>('/pump-logs', id),
+  getByPumpId: (pumpId: string) => apiRequest<PumpLog[]>(`/pump-log/${pumpId}`),
 };
 
 export const PaymentTypeAPI = {
@@ -126,6 +135,16 @@ export const FuelTypeAPI = {
   create: (data: Partial<FuelType>) => createItem<FuelType>('/fuel-types', data),
   update: (id: string, data: Partial<FuelType>) => updateItem<FuelType>('/fuel-types', id, data),
   delete: (id: string) => deleteItem<FuelType>('/fuel-types', id),
+  getByPumpId: (pumpId: string) => apiRequest<FuelType[]>(`/fuel-type/${pumpId}`),
+};
+
+export const IncomingFuelAPI = {
+  getAll: () => fetchList<IncomingFuel>('/incoming-fuel-logs'),
+  getOne: (id: string) => fetchOne<IncomingFuel>('/incoming-fuel-logs', id),
+  create: (data: Partial<IncomingFuel>) => createItem<IncomingFuel>('/incoming-fuel-logs', data),
+  update: (id: string, data: Partial<IncomingFuel>) => updateItem<IncomingFuel>('/incoming-fuel-logs', id, data),
+  delete: (id: string) => deleteItem<IncomingFuel>('/incoming-fuel-logs', id),
+  getByPumpId: (pumpId: string) => apiRequest<IncomingFuel[]>(`/incoming-fuel-log/${pumpId}`),
 };
 
 export const NozzleAPI = {
@@ -142,26 +161,29 @@ export const EmployeeLogAPI = {
   create: (data: Partial<EmployeeLog>) => createItem<EmployeeLog>('/employee-logs', data),
   update: (id: string, data: Partial<EmployeeLog>) => updateItem<EmployeeLog>('/employee-logs', id, data),
   delete: (id: string) => deleteItem<EmployeeLog>('/employee-logs', id),
+  getByPumpId: (pumpId: string) => apiRequest<EmployeeLog[]>(`/employee-logs?pump_id=${pumpId}`),
 };
 
 export const PaymentAPI = {
-
-  getAll: async () => {
-    const { user } =useAuth();
-    
-    const res = await fetch(`http://localhost:3000/api/v1/payment/${user.pumpId}`);
-    if (!res.ok) throw new Error("Failed to fetch payments");
-    return await res.json();
-  }
-  
+  getAll: () => fetchList<Payment>('/payments'),
+  getOne: (id: string) => fetchOne<Payment>('/payments', id),
+  create: (data: Partial<Payment>) => createItem<Payment>('/payments', data),
+  update: (id: string, data: Partial<Payment>) => updateItem<Payment>('/payments', id, data),
+  delete: (id: string) => deleteItem<Payment>('/payments', id),
+  getByPumpId: (pumpId: string) => apiRequest<Payment[]>(`/payment/${pumpId}`),
+  createForPump: (pumpId: string, data: Partial<Payment>) => apiRequest<Payment>(`/payment/${pumpId}`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
 };
 
 export const SaleAPI = {
   getAll: () => fetchList<Sale>('/sales'),
   getOne: (id: string) => fetchOne<Sale>('/sales', id),
-  create: (data: Partial<Sale>) => createItem<Sale>('/sales', data),
-  update: (id: string, data: Partial<Sale>) => updateItem<Sale>('/sales', id, data),
-  delete: (id: string) => deleteItem<Sale>('/sales', id),
+  create: (data: Partial<Sale>) => createItem<Sale>('/outgoing-fuel-logs', data),
+  update: (id: string, data: Partial<Sale>) => updateItem<Sale>('/outgoing-fuel-logs', id, data),
+  delete: (id: string) => deleteItem<Sale>('/outgoing-fuel-logs', id),
+  getOutgoingFuelLogs: () => apiRequest<Sale[]>('/outgoing-fuel-logs'),
 };
 
 export const UserAPI = {
@@ -170,6 +192,26 @@ export const UserAPI = {
   create: (data: Partial<User>) => createItem<User>('/users', data),
   update: (id: string, data: Partial<User>) => updateItem<User>('/users', id, data),
   delete: (id: string) => deleteItem<User>('/users', id),
+};
+
+// Helper functions for formatting
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
+
+export const calculateDuration = (start: string, end: string): string => {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  
+  const diffMs = endDate.getTime() - startDate.getTime();
+  const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffMins = Math.round((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  
+  return `${diffHrs}h ${diffMins}m`;
 };
 
 // For development/testing - can be removed in production

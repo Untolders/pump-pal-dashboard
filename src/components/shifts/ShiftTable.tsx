@@ -1,15 +1,39 @@
+
 import React from "react";
 import { DataTable } from "@/components/ui/data-table";
 import { Shift } from "@/types/schema";
 import { format } from "date-fns";
-import { calculateDuration } from "@/lib/utils";
+import { calculateDuration } from "@/services/api";
+import { useBreakpoint } from "@/hooks/use-responsive";
 
 interface ShiftTableProps {
   shifts: Shift[];
 }
 
 const ShiftTable: React.FC<ShiftTableProps> = ({ shifts }) => {
-  const columns = [
+  const isMobile = useBreakpoint('md', 'down');
+  
+  // Mobile-optimized columns (fewer columns)
+  const mobileColumns = [
+    {
+      header: "Name",
+      accessorKey: "friendly_name",
+    },
+    {
+      header: "Start",
+      accessorKey: "start",
+      cell: (item: any) => format(new Date(item.start), "PPP"),
+    },
+    {
+      header: "Duration",
+      id: "duration",
+      cell: (item: any) =>
+        item.start && item.end ? calculateDuration(item.start, item.end) : "N/A",
+    },
+  ];
+  
+  // Full set of columns for larger screens
+  const desktopColumns = [
     {
       header: "Friendly Name",
       accessorKey: "friendly_name",
@@ -38,7 +62,11 @@ const ShiftTable: React.FC<ShiftTableProps> = ({ shifts }) => {
   ];
 
   return (
-    <DataTable columns={columns} data={shifts} searchPlaceholder="Search shifts..." />
+    <DataTable 
+      columns={isMobile ? mobileColumns : desktopColumns} 
+      data={shifts} 
+      searchPlaceholder="Search shifts..." 
+    />
   );
 };
 

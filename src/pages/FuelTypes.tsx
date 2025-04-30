@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -14,60 +15,58 @@ import { FuelTypeForm } from "@/components/fuel-types/FuelTypeForm";
 import { useToast } from "@/hooks/use-toast";
 import type { FuelType } from "@/types/schema";
 import { useAuth } from "@/contexts/AuthContext";
+import { FuelTypeAPI } from "@/services/api";
+import { useApi } from "@/hooks/use-api";
 
 const FuelTypes = () => {
-  const [fuelTypes, setFuelTypes] = useState<FuelType[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedFuelType, setSelectedFuelType] = useState<FuelType | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Fetch fuel types from API
-  useEffect(() => {
-    const fetchFuelTypes = async () => {
-      try {
-        const res = await fetch(`http://localhost:3000/api/v1/fuel-type/${user.pumpId}`);
-        const data = await res.json();
-        console.log(data);
+  const { 
+    data: fuelTypes = [], 
+    isLoading, 
+    error, 
+    refetch 
+  } = useApi<FuelType[]>(
+    () => FuelTypeAPI.getByPumpId(user?.pumpId || ""),
+    { 
+      dependencies: [user?.pumpId],
+      defaultData: [] 
+    }
+  );
 
-        const transformedData: FuelType[] = data.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          quantity: item.quantity,
-          pricePerLiter: parseFloat(item.quantity || "0"),
-          color: item.color || "#9b87f5",
-        }));
-
-        setFuelTypes(transformedData);
-      } catch (error) {
-        toast({
-          title: "Error fetching fuel types",
-          description: "Could not load fuel types from the server.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    fetchFuelTypes();
-  }, [user.pumpId]);
-
-  const handleAddFuelType = (newFuelType: FuelType) => {
-    setFuelTypes([...fuelTypes, newFuelType]);
-    setIsFormOpen(false);
+  const handleAddFuelType = async (newFuelType: Partial<FuelType>) => {
+    try {
+      await FuelTypeAPI.create(newFuelType);
+      toast({
+        title: "Fuel type added",
+        description: `${newFuelType.name} has been added successfully.`
+      });
+      refetch();
+      setIsFormOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add fuel type.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in px-4 sm:px-6">
       <Card>
-        <CardHeader className="flex flex-row items-center">
-          <div className="space-y-1.5">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center">
+          <div className="space-y-1.5 mb-4 sm:mb-0">
             <CardTitle>Fuel Types</CardTitle>
             <CardDescription>
               Manage the fuel types available at your station
             </CardDescription>
           </div>
           <Button
-            className="ml-auto bg-pumpPrimary hover:bg-pumpSecondary"
+            className="ml-0 sm:ml-auto bg-pumpPrimary hover:bg-pumpSecondary w-full sm:w-auto"
             onClick={() => {
               setSelectedFuelType(null);
               setIsFormOpen(true);
@@ -78,37 +77,56 @@ const FuelTypes = () => {
           </Button>
         </CardHeader>
         <CardContent>
-          <DataTable
-            columns={[
-              {
-                header: "Name",
-                accessorKey: "name",
-                cell: (row) => (
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: row.color }}
-                    />
-                    <span>{row.name}</span>
-                  </div>
-                ),
-              },
-              { header: "Quantity", accessorKey: "quantity" },
-              {
-                header: "Price",
-                accessorKey: "pricePerLiter",
-                cell: (row) => (
-                  <Badge variant="secondary">₹{row.pricePerLiter.toFixed(2)}/L</Badge>
-                ),
-              },
-            ]}
-            data={fuelTypes}
-            onAdd={() => {
-              setSelectedFuelType(null);
-              setIsFormOpen(true);
-            }}
-            searchPlaceholder="Search fuel types..."
-          />
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin h-8 w-8 border-4 border-pumpPrimary border-t-transparent rounded-full"></div>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              <strong className="font-bold">Error:</strong>
+              <span className="block sm:inline"> Failed to load fuel types.</span>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <DataTable
+                columns={[
+                  {
+                    header: "Name",
+                    accessorKey: "name",
+                    cell: (row) => (
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{ backgroundColor: row.color || "#9b87f5" }}
+                        />
+                        <span>{row.name}</span>
+                      </div>
+                    ),
+                  },
+                  { 
+                    header: "Quantity", 
+                    accessorKey: "quantity" 
+                  },
+                  {
+                    header: "Price",
+                    accessorKey: "quantity",
+                    cell: (row) => {
+                      const price = parseFloat(row.quantity || "0");
+                      return (
+                        <Badge variant="secondary">₹{price.toFixed(2)}/L</Badge>
+                      );
+                    },
+                  },
+                ]}
+                data={fuelTypes}
+                onAdd={() => {
+                  setSelectedFuelType(null);
+                  setIsFormOpen(true);
+                }}
+                searchPlaceholder="Search fuel types..."
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

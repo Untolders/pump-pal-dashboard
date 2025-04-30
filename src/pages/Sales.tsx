@@ -1,31 +1,32 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import SaleForm from "@/components/sales/SaleForm"; // Assuming you have a form component
+import SaleForm from "@/components/sales/SaleForm";
 import SaleTable from "@/components/sales/SaleTable";
 import { useApi } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
-import axios from "axios";
-import { Sale } from "@/types/schema"; // Assuming Sale type is defined
+import { SaleAPI } from "@/services/api";
+import { Sale } from "@/types/schema";
 
 const Sales = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Fetch sales data function
-  const fetchSales = async (): Promise<Sale[]> => {
-    const response = await axios.get("http://localhost:3000/api/v1/outgoing-fuel-logs");
-    return response.data;
-  };
+  const { 
+    data: salesData = [], 
+    isLoading, 
+    error, 
+    refetch 
+  } = useApi<Sale[]>(
+    () => SaleAPI.getOutgoingFuelLogs(),
+    { defaultData: [] }
+  );
 
-  // Custom hook for fetching sales data
-  const { data: salesData, isLoading, error, refetch } = useApi<Sale[]>(fetchSales, { defaultData: [] });
-
-  // Handler for adding a sale (on success)
   const handleSaleAdded = async (newSale: Partial<Sale>) => {
     try {
-      await axios.post("http://localhost:3000/api/v1/outgoing-fuel-logs", newSale);
+      await SaleAPI.create(newSale);
       toast({
         title: "Sale added",
         description: "The new sale has been added successfully."
@@ -43,12 +44,12 @@ const Sales = () => {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto py-6 px-4 sm:px-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold">Sales</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-pumpPrimary hover:bg-pumpSecondary">
+            <Button className="bg-pumpPrimary hover:bg-pumpSecondary w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Add New Sale
             </Button>
@@ -67,7 +68,9 @@ const Sales = () => {
           <span className="block sm:inline"> Failed to load sales data. Please try again later.</span>
         </div>
       ) : (
-        <SaleTable sales={salesData} />
+        <div className="overflow-x-auto">
+          <SaleTable sales={salesData} />
+        </div>
       )}
     </div>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Card,
@@ -20,37 +21,57 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
-//updates
-const IncomingFuel = () => {
+import { IncomingFuelAPI } from "@/services/api";
+import { IncomingFuel } from "@/types/schema";
+
+const IncomingFuelPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [openDialog, setOpenDialog] = useState(false);
 
   const {
-    data: incomingFuelLogs,
+    data: incomingFuelLogs = [],
     isLoading,
     error,
     refetch
-  } = useApi<any[]>(
-    () =>
-      fetch(`http://localhost:3000/api/v1/incoming-fuel-log/${user?.pumpId}`).then(res =>
-        res.json()
-      ),
-    { defaultData: [] }
+  } = useApi<IncomingFuel[]>(
+    () => IncomingFuelAPI.getByPumpId(user?.pumpId || ""),
+    { 
+      dependencies: [user?.pumpId],
+      defaultData: [] 
+    }
   );
 
+  const handleAddFuelLog = async (fuelLog: Partial<IncomingFuel>) => {
+    try {
+      await IncomingFuelAPI.create(fuelLog);
+      refetch();
+      setOpenDialog(false);
+      toast({
+        title: "Success",
+        description: "Incoming fuel log added.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add incoming fuel log.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in px-4 sm:px-6">
       <Card>
-        <CardHeader className="flex flex-row items-center">
-          <div className="space-y-1.5">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center">
+          <div className="space-y-1.5 mb-4 sm:mb-0">
             <CardTitle>Incoming Fuel Logs</CardTitle>
             <CardDescription>
               View and add new incoming fuel entries
             </CardDescription>
           </div>
           <Button
-            className="ml-auto bg-pumpPrimary hover:bg-pumpSecondary"
+            className="ml-0 sm:ml-auto bg-pumpPrimary hover:bg-pumpSecondary w-full sm:w-auto"
             onClick={() => setOpenDialog(true)}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -67,13 +88,15 @@ const IncomingFuel = () => {
               <strong className="font-bold">Error:</strong> Failed to load data.
             </div>
           ) : (
-            <IncomingFuelTable fuelLogs={incomingFuelLogs} />
+            <div className="overflow-x-auto">
+              <IncomingFuelTable fuelLogs={incomingFuelLogs} />
+            </div>
           )}
         </CardContent>
       </Card>
 
       <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-md sm:max-w-lg md:max-w-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Add Incoming Fuel</AlertDialogTitle>
             <AlertDialogDescription>
@@ -81,14 +104,7 @@ const IncomingFuel = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AddIncomingFuelForm
-            onSuccess={() => {
-              setOpenDialog(false);
-              refetch();
-              toast({
-                title: "Success",
-                description: "Incoming fuel log added.",
-              });
-            }}
+            onSuccess={handleAddFuelLog}
             onCancel={() => setOpenDialog(false)}
           />
         </AlertDialogContent>
@@ -97,4 +113,4 @@ const IncomingFuel = () => {
   );
 };
 
-export default IncomingFuel;
+export default IncomingFuelPage;

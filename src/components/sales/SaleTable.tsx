@@ -1,24 +1,29 @@
+
 import React from "react";
 import { Sale } from "@/types/schema";
+import { useBreakpoint } from "@/hooks/use-responsive";
+import { formatCurrency } from "@/services/api";
 
 interface SaleTableProps {
   sales: Sale[];
 }
 
 const SaleTable: React.FC<SaleTableProps> = ({ sales }) => {
+  const isMobile = useBreakpoint('md', 'down');
+  
   return (
     <div className="overflow-x-auto border rounded-lg">
       <table className="min-w-full table-auto">
         <thead className="bg-gray-100 text-left text-sm font-medium text-gray-700">
           <tr>
-            <th className="px-4 py-3">Employee</th>
-            <th className="px-4 py-3">Shift</th>
-            <th className="px-4 py-3">Pump</th>
+            {!isMobile && <th className="px-4 py-3">Employee</th>}
+            {!isMobile && <th className="px-4 py-3">Shift</th>}
+            {!isMobile && <th className="px-4 py-3">Pump</th>}
             <th className="px-4 py-3">Nozzle</th>
-            <th className="px-4 py-3">Fuel Type</th>
-            <th className="px-4 py-3">Quantity (L)</th>
-            <th className="px-4 py-3">Rate/L (₹)</th>
-            <th className="px-4 py-3">Amount (₹)</th>
+            {!isMobile && <th className="px-4 py-3">Fuel Type</th>}
+            <th className="px-4 py-3">Qty (L)</th>
+            {!isMobile && <th className="px-4 py-3">Rate/L (₹)</th>}
+            <th className="px-4 py-3">Amount</th>
             <th className="px-4 py-3">Date</th>
           </tr>
         </thead>
@@ -30,17 +35,18 @@ const SaleTable: React.FC<SaleTableProps> = ({ sales }) => {
             const nozzleName = sale.employee_log?.nozzle?.friendly_name ?? "N/A";
             const fuelType = sale.employee_log?.nozzle?.fuel_type?.name ?? "N/A";
             const date = new Date(sale.created_at ?? "").toLocaleDateString();
+            const amount = formatCurrency(sale.amount || 0);
 
             return (
               <tr key={sale.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3">{employeeName}</td>
-                <td className="px-4 py-3">{shiftName}</td>
-                <td className="px-4 py-3">{pumpName}</td>
+                {!isMobile && <td className="px-4 py-3">{employeeName}</td>}
+                {!isMobile && <td className="px-4 py-3">{shiftName}</td>}
+                {!isMobile && <td className="px-4 py-3">{pumpName}</td>}
                 <td className="px-4 py-3">{nozzleName}</td>
-                <td className="px-4 py-3">{fuelType}</td>
+                {!isMobile && <td className="px-4 py-3">{fuelType}</td>}
                 <td className="px-4 py-3">{sale.quantity}</td>
-                <td className="px-4 py-3">₹{sale.rate_per_l}</td>
-                <td className="px-4 py-3 font-semibold text-green-700">₹{sale.amount}</td>
+                {!isMobile && <td className="px-4 py-3">₹{sale.rate_per_l}</td>}
+                <td className="px-4 py-3 font-semibold text-green-700">{amount}</td>
                 <td className="px-4 py-3">{date}</td>
               </tr>
             );
