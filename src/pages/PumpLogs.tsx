@@ -22,7 +22,10 @@ const PumpLogs = () => {
     error, 
     refetch 
   } = useApi<PumpLog[]>(
-    () => PumpLogAPI.getByPumpId(user?.pumpId || ""),
+    async () => {
+      const response = await PumpLogAPI.getByPumpId(user?.pumpId || "");
+      return response;
+    },
     {
       dependencies: [user?.pumpId],
       defaultData: []

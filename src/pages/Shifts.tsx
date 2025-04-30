@@ -22,14 +22,17 @@ const Shifts = () => {
     error, 
     refetch 
   } = useApi<Shift[]>(
-    () => ShiftAPI.getByPumpId(user?.pumpId || ""),
+    async () => {
+      const response = await ShiftAPI.getByPumpId(user?.pumpId || "");
+      return response;
+    },
     { 
       dependencies: [user?.pumpId],
       defaultData: [] 
     }
   );
 
-  const handleShiftAdded = async (newShift: Partial<Shift>) => {
+  const handleShiftAdded = async (newShift: any) => {
     try {
       await ShiftAPI.create(newShift);
       toast({ 

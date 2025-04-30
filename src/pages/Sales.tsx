@@ -20,7 +20,10 @@ const Sales = () => {
     error, 
     refetch 
   } = useApi<Sale[]>(
-    () => SaleAPI.getOutgoingFuelLogs(),
+    async () => {
+      const response = await SaleAPI.getOutgoingFuelLogs();
+      return response.data || [];
+    },
     { defaultData: [] }
   );
 

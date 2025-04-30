@@ -38,7 +38,10 @@ const EmployeeLogs = () => {
     error, 
     refetch 
   } = useApi<EmployeeLog[]>(
-    () => EmployeeLogAPI.getByPumpId(user?.pumpId || ""),
+    async () => {
+      const response = await EmployeeLogAPI.getByPumpId(user?.pumpId || "");
+      return response.data || [];
+    },
     { 
       dependencies: [user?.pumpId],
       defaultData: [] 
@@ -101,7 +104,7 @@ const EmployeeLogs = () => {
                 columns={[
                   {
                     header: "Employee",
-                    accessorKey: "user.first_name",
+                    id: "employee",
                     cell: (row) =>
                       row.user
                         ? `${row.user.first_name} ${row.user.last_name}`
@@ -109,12 +112,12 @@ const EmployeeLogs = () => {
                   },
                   {
                     header: "Shift",
-                    accessorKey: "shift.friendly_name",
+                    id: "shift",
                     cell: (row) => row.shift?.friendly_name || "N/A",
                   },
                   {
                     header: "Nozzle",
-                    accessorKey: "nozzle.friendly_name",
+                    id: "nozzle",
                     cell: (row) => row.nozzle?.friendly_name || "N/A",
                   },
                   {

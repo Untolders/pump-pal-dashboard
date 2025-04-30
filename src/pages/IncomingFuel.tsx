@@ -35,7 +35,10 @@ const IncomingFuelPage = () => {
     error,
     refetch
   } = useApi<IncomingFuel[]>(
-    () => IncomingFuelAPI.getByPumpId(user?.pumpId || ""),
+    async () => {
+      const response = await IncomingFuelAPI.getByPumpId(user?.pumpId || "");
+      return response;
+    },
     { 
       dependencies: [user?.pumpId],
       defaultData: [] 

@@ -49,8 +49,8 @@ async function apiRequest<T>(
 }
 
 // Generic CRUD functions
-export async function fetchList<T>(endpoint: string): Promise<PaginatedResponse<T>> {
-  return apiRequest<PaginatedResponse<T>>(endpoint);
+export async function fetchList<T>(endpoint: string): Promise<ApiResponse<T[]>> {
+  return apiRequest<ApiResponse<T[]>>(endpoint);
 }
 
 export async function fetchOne<T>(endpoint: string, id: string): Promise<ApiResponse<T>> {
@@ -161,7 +161,7 @@ export const EmployeeLogAPI = {
   create: (data: Partial<EmployeeLog>) => createItem<EmployeeLog>('/employee-logs', data),
   update: (id: string, data: Partial<EmployeeLog>) => updateItem<EmployeeLog>('/employee-logs', id, data),
   delete: (id: string) => deleteItem<EmployeeLog>('/employee-logs', id),
-  getByPumpId: (pumpId: string) => apiRequest<EmployeeLog[]>(`/employee-logs?pump_id=${pumpId}`),
+  getByPumpId: (pumpId: string) => apiRequest<ApiResponse<EmployeeLog[]>>(`/employee-logs?pump_id=${pumpId}`),
 };
 
 export const PaymentAPI = {
@@ -170,8 +170,8 @@ export const PaymentAPI = {
   create: (data: Partial<Payment>) => createItem<Payment>('/payments', data),
   update: (id: string, data: Partial<Payment>) => updateItem<Payment>('/payments', id, data),
   delete: (id: string) => deleteItem<Payment>('/payments', id),
-  getByPumpId: (pumpId: string) => apiRequest<Payment[]>(`/payment/${pumpId}`),
-  createForPump: (pumpId: string, data: Partial<Payment>) => apiRequest<Payment>(`/payment/${pumpId}`, {
+  getByPumpId: (pumpId: string) => apiRequest<ApiResponse<Payment[]>>(`/payment/${pumpId}`),
+  createForPump: (pumpId: string, data: Partial<Payment>) => apiRequest<ApiResponse<Payment>>(`/payment/${pumpId}`, {
     method: 'POST',
     body: JSON.stringify(data),
   }),
@@ -183,7 +183,7 @@ export const SaleAPI = {
   create: (data: Partial<Sale>) => createItem<Sale>('/outgoing-fuel-logs', data),
   update: (id: string, data: Partial<Sale>) => updateItem<Sale>('/outgoing-fuel-logs', id, data),
   delete: (id: string) => deleteItem<Sale>('/outgoing-fuel-logs', id),
-  getOutgoingFuelLogs: () => apiRequest<Sale[]>('/outgoing-fuel-logs'),
+  getOutgoingFuelLogs: () => apiRequest<ApiResponse<Sale[]>>('/outgoing-fuel-logs'),
 };
 
 export const UserAPI = {

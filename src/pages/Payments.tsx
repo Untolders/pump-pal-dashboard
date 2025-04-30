@@ -5,11 +5,11 @@ import { Plus } from "lucide-react";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import PaymentForm from "@/components/payments/PaymentForm";
 import PaymentTable from "@/components/payments/PaymentTable";
-import { Payment } from "@/types/schema";
+import { useApi } from "@/hooks/use-api";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { PaymentAPI } from "@/services/api";
-import { useApi } from "@/hooks/use-api";
+import { Payment } from "@/types/schema";
 
 const Payments = () => {
   const { user } = useAuth();
@@ -22,7 +22,10 @@ const Payments = () => {
     error, 
     refetch 
   } = useApi<Payment[]>(
-    () => PaymentAPI.getByPumpId(user?.pumpId || ""),
+    async () => {
+      const response = await PaymentAPI.getByPumpId(user?.pumpId || "");
+      return response.data || [];
+    },
     { 
       dependencies: [user?.pumpId],
       defaultData: [] 
@@ -30,7 +33,7 @@ const Payments = () => {
   );
 
   // Handle new payment submission
-  const handlePaymentAdded = async (newPayment: Partial<Payment>) => {
+  const handlePaymentAdded = async (newPayment: any) => {
     if (!user?.pumpId) {
       toast({ title: "Error", description: "Pump ID not found.", variant: "destructive" });
       return;

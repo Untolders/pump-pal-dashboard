@@ -14,7 +14,7 @@ export function useApi<T>(
   fetchFn: () => Promise<ApiResponse<T> | PaginatedResponse<T> | T[]>,
   options: UseApiOptions<T> = {}
 ) {
-  const [data, setData] = useState<T | T[] | null>(options.defaultData || null);
+  const [data, setData] = useState<T | null>(options.defaultData || null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const dependencies = options.dependencies || [];
@@ -30,11 +30,11 @@ export function useApi<T>(
           // Check response type and extract data appropriately
           if (Array.isArray(response)) {
             // Direct array response
-            setData(response);
+            setData(response as unknown as T);
             if (options.onSuccess) options.onSuccess(response as unknown as T);
           } else if ('data' in response && Array.isArray(response.data)) {
             // Paginated response
-            setData(response.data);
+            setData(response.data as unknown as T);
             if (options.onSuccess) options.onSuccess(response.data as unknown as T);
           } else if ('data' in response) {
             // Single item response
@@ -78,11 +78,11 @@ export function useApi<T>(
       // Check response type and extract data appropriately
       if (Array.isArray(response)) {
         // Direct array response
-        setData(response);
+        setData(response as unknown as T);
         if (options.onSuccess) options.onSuccess(response as unknown as T);
       } else if ('data' in response && Array.isArray(response.data)) {
         // Paginated response
-        setData(response.data);
+        setData(response.data as unknown as T);
         if (options.onSuccess) options.onSuccess(response.data as unknown as T);
       } else if ('data' in response) {
         // Single item response
@@ -131,7 +131,7 @@ export function useMutation<T, U = any>(
       const response = await mutationFn(variables);
       let result: T;
       
-      if ('data' in response && response.data !== undefined) {
+      if (typeof response === 'object' && response !== null && 'data' in response && response.data !== undefined) {
         result = response.data;
       } else {
         result = response as T;

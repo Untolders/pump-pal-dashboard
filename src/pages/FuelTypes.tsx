@@ -30,7 +30,10 @@ const FuelTypes = () => {
     error, 
     refetch 
   } = useApi<FuelType[]>(
-    () => FuelTypeAPI.getByPumpId(user?.pumpId || ""),
+    async () => {
+      const response = await FuelTypeAPI.getByPumpId(user?.pumpId || "");
+      return response;
+    },
     { 
       dependencies: [user?.pumpId],
       defaultData: [] 
@@ -133,12 +136,8 @@ const FuelTypes = () => {
       {isFormOpen && (
         <FuelTypeForm
           isOpen={isFormOpen}
-          onClose={() => {
-            setIsFormOpen(false);
-            setSelectedFuelType(null);
-          }}
-          onSubmit={handleAddFuelType}
-          initialData={selectedFuelType || undefined}
+          onOpenChange={setIsFormOpen}
+          defaultValues={selectedFuelType || undefined}
           title={"Add New Fuel Type"}
         />
       )}
