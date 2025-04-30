@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
       roles: ["admin", "superadmin"] 
     },
     { 
-      label: "Incoming Fuel", 
+      label: "Incoming Fuel",   //incoming fuel
       icon: Droplets, 
       href: "/incoming-fuel", 
       roles: ["admin", "superadmin"] 

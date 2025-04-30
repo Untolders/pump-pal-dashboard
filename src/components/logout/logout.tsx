@@ -1,7 +1,7 @@
 // src/components/logout/LogoutButton.tsx
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-
+ //logout 
 const LogoutButton = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();

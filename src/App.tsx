@@ -76,7 +76,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/login" element={<GoogleAuthWrapper />} />
       
-      {/* Protected routes for all users */}
+      {/* Protected routes  */}
       {[
         { path: "/", element: <Dashboard /> },
         { path: "/employee-logs", element: <EmployeeLogs /> },
