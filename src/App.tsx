@@ -26,6 +26,9 @@ import PumpLogs from "./pages/PumpLogs";
 import Shifts from "./pages/Shifts";
 import Users from "./pages/Users";
 import AdminPumps from "./pages/AdminPumps";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminPumpDetails from "./pages/AdminPumpDetails";
+import AdminLogs from "./pages/AdminLogs";
 import IncomingFuel from "./pages/IncomingFuel";
 
 
@@ -115,8 +118,11 @@ const AppRoutes = () => {
       
       {/* Super Admin only routes */}
       {[
+        { path: "/admin/dashboard", element: <AdminDashboard /> },
         { path: "/admin/users", element: <Users /> },
         { path: "/admin/pumps", element: <AdminPumps /> },
+        { path: "/admin/pumps/:pumpId/details", element: <AdminPumpDetails /> },
+        { path: "/admin/logs", element: <AdminLogs /> },
       ].map(({ path, element }) => (
         <Route
           key={path}

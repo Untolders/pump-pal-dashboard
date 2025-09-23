@@ -2,21 +2,25 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle, Eye, ShieldAlert, ShieldCheck } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Pump } from "@/types/schema";
 import { useApi } from "@/hooks/use-api";
-import { PumpAPI } from "@/services/api";
+import { PumpAPI, AdminAPI } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/utils";
+import { Link } from "react-router-dom";
 import PumpForm from "@/components/pumps/PumpForm";
 
 const AdminPumps = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBlockDialogOpen, setIsBlockDialogOpen] = useState(false);
   const [selectedPump, setSelectedPump] = useState<Pump | null>(null);
+  const [blockAction, setBlockAction] = useState<'block' | 'unblock'>('block');
   const { toast } = useToast();
   
   const { data: pumps, isLoading, error, refetch } = useApi<Pump[]>(
@@ -72,9 +76,40 @@ const AdminPumps = () => {
     }
   };
 
+  const handleBlockPump = async () => {
+    if (!selectedPump) return;
+    
+    try {
+      if (blockAction === 'block') {
+        await AdminAPI.blockPump(selectedPump.id);
+        toast({
+          title: "Pump blocked",
+          description: `${selectedPump.name} has been blocked.`
+        });
+      } else {
+        await AdminAPI.unblockPump(selectedPump.id);
+        toast({
+          title: "Pump unblocked", 
+          description: `${selectedPump.name} has been unblocked.`
+        });
+      }
+      refetch();
+      setIsBlockDialogOpen(false);
+      setSelectedPump(null);
+    } catch (error) {
+      console.error("Error updating pump status:", error);
+    }
+  };
+
   const openDeleteDialog = (pump: Pump) => {
     setSelectedPump(pump);
     setIsDeleteDialogOpen(true);
+  };
+
+  const openBlockDialog = (pump: Pump, action: 'block' | 'unblock') => {
+    setSelectedPump(pump);
+    setBlockAction(action);
+    setIsBlockDialogOpen(true);
   };
 
   const openEditForm = (pump: Pump) => {
@@ -102,13 +137,20 @@ const AdminPumps = () => {
       accessorKey: "status",
       cell: (item: any) => {
         const status = item.status || "active";
+        const isBlocked = item.isBlocked;
         return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium capitalize
-            ${status === 'active' ? 'bg-green-100 text-green-800' : 
-              status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' : 
-              'bg-red-100 text-red-800'}`}>
-            {status}
-          </span>
+          <div className="flex gap-1 flex-wrap">
+            <Badge variant={
+              status === 'active' ? 'default' : 
+              status === 'maintenance' ? 'secondary' : 
+              'destructive'
+            }>
+              {status}
+            </Badge>
+            {isBlocked && (
+              <Badge variant="destructive">Blocked</Badge>
+            )}
+          </div>
         );
       },
     },
@@ -126,6 +168,37 @@ const AdminPumps = () => {
       header: "Created At",
       accessorKey: "created_at",
       cell: (item: any) => formatDate(item.created_at),
+    },
+    {
+      header: "Actions",
+      id: "actions",
+      cell: (item: any) => (
+        <div className="flex gap-2">
+          <Link to={`/admin/pumps/${item.id}/details`}>
+            <Button variant="outline" size="sm">
+              <Eye className="h-4 w-4 mr-1" />
+              View
+            </Button>
+          </Link>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => openBlockDialog(item, item.isBlocked ? 'unblock' : 'block')}
+          >
+            {item.isBlocked ? (
+              <>
+                <ShieldCheck className="h-4 w-4 mr-1" />
+                Unblock
+              </>
+            ) : (
+              <>
+                <ShieldAlert className="h-4 w-4 mr-1" />
+                Block
+              </>
+            )}
+          </Button>
+        </div>
+      ),
     }
   ];
 
@@ -170,6 +243,7 @@ const AdminPumps = () => {
               onEdit={(pump) => openEditForm(pump)}
               onDelete={(pump) => openDeleteDialog(pump)}
               searchPlaceholder="Search pumps..."
+              showActions={false}
             />
           )}
         </CardContent>
@@ -195,6 +269,43 @@ const AdminPumps = () => {
               className="bg-pumpRed hover:bg-red-700"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Block/Unblock Confirmation Dialog */}
+      <AlertDialog open={isBlockDialogOpen} onOpenChange={setIsBlockDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center">
+              {blockAction === 'block' ? (
+                <>
+                  <ShieldAlert className="h-5 w-5 text-destructive mr-2" />
+                  Block Pump
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="h-5 w-5 text-green-600 mr-2" />
+                  Unblock Pump
+                </>
+              )}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to {blockAction} {selectedPump?.name}? 
+              {blockAction === 'block' 
+                ? " This will prevent all operations at this pump." 
+                : " This will restore normal operations at this pump."
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBlockPump}
+              className={blockAction === 'block' ? "bg-destructive hover:bg-destructive/90" : ""}
+            >
+              {blockAction === 'block' ? 'Block' : 'Unblock'} Pump
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

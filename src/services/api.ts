@@ -236,3 +236,51 @@ export const mockPaginatedResponse = <T>(data: T[], delay = 500): Promise<Pagina
     }, delay);
   });
 };
+
+// Admin APIs
+export const AdminAPI = {
+  getDashboardStats: (): Promise<import("@/types/schema").AdminDashboardStats> => 
+    apiRequest("/admin/dashboard-stats"),
+  
+  getPumpDetails: (pumpId: string): Promise<import("@/types/schema").PumpDetails> => 
+    apiRequest(`/admin/pumps/${pumpId}/details`),
+  
+  blockUser: (userId: string): Promise<void> => apiRequest(`/admin/users/${userId}/block`, {
+    method: "POST",
+  }),
+  
+  unblockUser: (userId: string): Promise<void> => apiRequest(`/admin/users/${userId}/unblock`, {
+    method: "POST",
+  }),
+  
+  addUserToPump: (pumpId: string, userData: Partial<import("@/types/schema").User>): Promise<import("@/types/schema").User> => 
+    apiRequest(`/admin/pumps/${pumpId}/users`, {
+      method: "POST",
+      body: JSON.stringify(userData),
+    }),
+  
+  getActivityLogs: (filters?: {
+    search?: string;
+    action?: string;
+    entity_type?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }): Promise<import("@/types/schema").ActivityLog[]> => {
+    const params = new URLSearchParams();
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.action) params.append('action', filters.action);
+    if (filters?.entity_type) params.append('entity_type', filters.entity_type);
+    if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
+    if (filters?.dateTo) params.append('dateTo', filters.dateTo);
+    
+    return apiRequest(`/admin/activity-logs?${params.toString()}`);
+  },
+  
+  blockPump: (pumpId: string): Promise<void> => apiRequest(`/admin/pumps/${pumpId}/block`, {
+    method: "POST",
+  }),
+  
+  unblockPump: (pumpId: string): Promise<void> => apiRequest(`/admin/pumps/${pumpId}/unblock`, {
+    method: "POST",
+  }),
+};

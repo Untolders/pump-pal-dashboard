@@ -30,20 +30,20 @@ export function useApi<T>(
           // Check response type and extract data appropriately
           if (Array.isArray(response)) {
             // Direct array response
-            setData(response as unknown as T);
-            if (options.onSuccess) options.onSuccess(response as unknown as T);
+            setData(response as T);
+            if (options.onSuccess) options.onSuccess(response as T);
           } else if ('data' in response && Array.isArray(response.data)) {
             // Paginated response
-            setData(response.data as unknown as T);
-            if (options.onSuccess) options.onSuccess(response.data as unknown as T);
+            setData(response.data as T);
+            if (options.onSuccess) options.onSuccess(response.data as T);
           } else if ('data' in response) {
             // Single item response
-            setData(response.data);
-            if (options.onSuccess) options.onSuccess(response.data);
+            setData(response.data as T);
+            if (options.onSuccess) options.onSuccess(response.data as T);
           } else {
             // Direct object response
-            setData(response as unknown as T);
-            if (options.onSuccess) options.onSuccess(response as unknown as T);
+            setData(response as T);
+            if (options.onSuccess) options.onSuccess(response as T);
           }
         }
       } catch (err) {

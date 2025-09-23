@@ -185,3 +185,45 @@ export interface PaginatedResponse<T> {
   limit: number;
   success: boolean;
 }
+
+// Activity Log types
+export interface ActivityLog extends BaseEntity {
+  action: "login" | "signup" | "create" | "update" | "delete" | "block" | "unblock";
+  entity_type?: string; // e.g., "pump", "user", "shift", etc.
+  entity_id?: string;
+  user: User;
+  pump?: Pump;
+  details?: string;
+  ip_address?: string;
+  device_info?: string;
+  location?: string;
+  user_agent?: string;
+}
+
+// Admin Dashboard Statistics
+export interface AdminDashboardStats {
+  totalPumps: number;
+  activePumps: number;
+  blockedPumps: number;
+  totalUsers: number;
+  activeUsers: number;
+  totalSalesToday: number;
+  totalVolumeToday: number;
+  recentActivities: ActivityLog[];
+}
+
+// Pump with extended details for admin
+export interface PumpDetails extends Pump {
+  users: User[];
+  employees: User[];
+  fuelTypes: FuelType[];
+  isBlocked?: boolean;
+  lastActivity?: string;
+  totalUsers?: number;
+  totalSales?: number;
+  monthlyStats?: {
+    sales: number;
+    volume: number;
+    transactions: number;
+  };
+}

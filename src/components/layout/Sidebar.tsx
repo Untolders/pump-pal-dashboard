@@ -24,7 +24,11 @@ import {
   UserPlus,
   Car,
   MapPin,
-  User
+  User,
+  Shield,
+  Building2,
+  Activity,
+  Users
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -112,6 +116,19 @@ const Sidebar: React.FC<SidebarProps> = ({ userRole }) => {
         { label: "Add Employee", icon: UserPlus, href: "/employees/new" },
         { label: "Add Vehicle", icon: Car, href: "/vehicles/new" },
         { label: "Add Address", icon: MapPin, href: "/addresses/new" }
+      ]
+    },
+    // Super Admin only navigation
+    { 
+      label: "Admin Control", 
+      icon: Shield, 
+      href: "#", 
+      roles: ["superadmin"],
+      subItems: [
+        { label: "Dashboard", icon: Home, href: "/admin/dashboard" },
+        { label: "Manage Pumps", icon: Building2, href: "/admin/pumps" },
+        { label: "Manage Users", icon: Users, href: "/admin/users" },
+        { label: "Activity Logs", icon: Activity, href: "/admin/logs" }
       ]
     }
   ];

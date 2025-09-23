@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 
 export interface Column<T> {
   header: string;
-  accessorKey?: keyof T;
+  accessorKey?: keyof T | string;
   id?: string;
   cell?: (item: T) => React.ReactNode;
 }
@@ -38,6 +38,9 @@ interface DataTableProps<T> {
   searchPlaceholder?: string;
   idAccessor?: keyof T;
   className?: string;
+  showActions?: boolean;
+  editLabel?: string;
+  deleteLabel?: string;
 }
 
 export function DataTable<T>({
@@ -50,6 +53,9 @@ export function DataTable<T>({
   searchPlaceholder = "Search...",
   idAccessor = "id" as keyof T,
   className,
+  showActions = true,
+  editLabel = "Edit",
+  deleteLabel = "Delete",
 }: DataTableProps<T>) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -88,7 +94,7 @@ export function DataTable<T>({
                   {column.header}
                 </TableHead>
               ))}
-              {(onEdit || onDelete) && <TableHead>Actions</TableHead>}
+              {showActions && (onEdit || onDelete) && <TableHead>Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -108,7 +114,7 @@ export function DataTable<T>({
                         : column.accessorKey ? item[column.accessorKey] as React.ReactNode : null}
                     </TableCell>
                   ))}
-                  {(onEdit || onDelete) && (
+                  {showActions && (onEdit || onDelete) && (
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
